@@ -32,6 +32,7 @@ import com.opengamma.strata.product.fxopt.FxVanillaOption;
 import com.opengamma.strata.product.index.IborFuture;
 import com.opengamma.strata.product.index.IborFutureOption;
 import com.opengamma.strata.product.index.OvernightFuture;
+import com.opengamma.strata.product.index.OvernightFutureOption;
 import com.opengamma.strata.product.payment.BulletPayment;
 import com.opengamma.strata.product.swap.Swap;
 import com.opengamma.strata.product.swaption.Swaption;
@@ -122,6 +123,10 @@ public final class ProductType
    */
   public static final ProductType OVERNIGHT_FUTURE = ProductType.of("OvernightFuture", "Overnight Future");
   /**
+   * A {@link OvernightFutureOption}.
+   */
+  public static final ProductType OVERNIGHT_FUTURE_OPTION = ProductType.of("OvernightFutureOption", "Overnight Future Option");
+  /**
    * A representation based on sensitivities.
    */
   public static final ProductType SENSITIVITIES = ProductType.of("Sensitivities");
@@ -189,7 +194,7 @@ public final class ProductType
    * @param description  the description
    * @return a type instance with the specified name
    */
-  private static ProductType of(String name, String description) {
+  public static ProductType of(String name, String description) {
     return new ProductType(name, description);
   }
 

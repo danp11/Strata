@@ -420,8 +420,18 @@ public class DiscountingFixedCouponBondProductPricer {
     return dirtyPriceSensitivity(bond, provider, settlementDate);
   }
 
-  // calculate the dirty price sensitivity
-  PointSensitivityBuilder dirtyPriceSensitivity(
+  /**
+   * Calculates the dirty price sensitivity of the fixed coupon bond product under the specified settlement date.
+   * <p>
+   * The dirty price sensitivity of the security is the sensitivity of the present value to
+   * the underlying curves.
+   *
+   * @param bond  the product
+   * @param provider  the discounting provider
+   * @param settlementDate  the settlement date
+   * @return the dirty price value curve sensitivity of the security
+   */
+  public PointSensitivityBuilder dirtyPriceSensitivity(
       ResolvedFixedCouponBond bond,
       LegalEntityDiscountingProvider provider,
       LocalDate settlementDate) {
@@ -1046,10 +1056,7 @@ public class DiscountingFixedCouponBondProductPricer {
     int couponIndex = couponIndex(bond.getPeriodicPayments(), settlementDate);
     double factorSpot = accruedYearFraction(bond, settlementDate);
     double factorPeriod = bond.getPeriodicPayments().get(couponIndex).getYearFraction();
-    if (bond.getYieldConvention().equals(GB_BUMP_DMO)) {
-      return (factorPeriod - factorSpot) * ((double) bond.getFrequency().eventsPerYear());
-    }
-    return (factorPeriod - factorSpot) / factorPeriod;
+    return (factorPeriod - factorSpot) * ((double) bond.getFrequency().eventsPerYear());
   }
 
   private int couponIndex(ImmutableList<FixedCouponBondPaymentPeriod> list, LocalDate date) {

@@ -8,6 +8,7 @@ package com.opengamma.strata.loader.csv;
 import static com.opengamma.strata.loader.csv.CsvLoaderColumns.ID_FIELD;
 import static com.opengamma.strata.loader.csv.CsvLoaderColumns.ID_SCHEME_FIELD;
 import static com.opengamma.strata.loader.csv.CsvLoaderColumns.POSITION_TYPE_FIELD;
+import static com.opengamma.strata.loader.csv.CsvLoaderColumns.TRADE_TYPE_FIELD;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -25,14 +27,17 @@ import com.opengamma.strata.basics.StandardSchemes;
 import com.opengamma.strata.collect.ArgChecker;
 import com.opengamma.strata.collect.Guavate;
 import com.opengamma.strata.collect.MapStream;
+import com.opengamma.strata.collect.Messages;
 import com.opengamma.strata.collect.io.CharSources;
 import com.opengamma.strata.collect.io.CsvIterator;
 import com.opengamma.strata.collect.io.CsvRow;
 import com.opengamma.strata.collect.io.ResourceLocator;
 import com.opengamma.strata.collect.io.UnicodeBom;
 import com.opengamma.strata.collect.named.ExtendedEnum;
+import com.opengamma.strata.collect.result.FailureAttributeKeys;
 import com.opengamma.strata.collect.result.FailureItem;
 import com.opengamma.strata.collect.result.FailureReason;
+import com.opengamma.strata.collect.result.ParseFailureException;
 import com.opengamma.strata.collect.result.ValueWithFailures;
 import com.opengamma.strata.product.Position;
 import com.opengamma.strata.product.PositionInfo;
@@ -68,6 +73,8 @@ import com.opengamma.strata.product.etd.EtdSettlementType;
  * <li>The 'Id' column is optional, and is the identifier of the position,
  *   such as 'POS12345'.
  * </ul>
+ * Note that trades may be included in the same file as positions.
+ * The 'Strata Position Type' column must either be empty or have the value 'Position'.
  * 
  * <h4>SEC/Security</h4>
  * <p>
@@ -346,7 +353,23 @@ public final class PositionCsvLoader {
     List<T> positions = new ArrayList<>();
     List<FailureItem> failures = new ArrayList<>();
     for (CsvRow row : csv.asIterable()) {
-      String typeRaw = row.findValue(POSITION_TYPE_FIELD).orElse("SMART");
+      // handle mixed trade/position files
+      Optional<String> tradeTypeOpt = row.findValue(TRADE_TYPE_FIELD).filter(str -> !str.equalsIgnoreCase("POSITION"));
+      Optional<String> positionTypeOpt = row.findValue(POSITION_TYPE_FIELD).filter(str -> !str.equalsIgnoreCase("TRADE"));
+      if (tradeTypeOpt.isPresent() && positionTypeOpt.isPresent()) {
+        failures.add(FailureItem.of(
+            FailureReason.PARSING,
+            "CSV position file '{fileName}' contained row with mixed trade/position type '{type}' at line {lineNumber}",
+            CharSources.extractFileName(charSource),
+            tradeTypeOpt.get() + "/" + positionTypeOpt.get(),
+            row.lineNumber()));
+        continue; // ignore bad row
+      } else if (tradeTypeOpt.isPresent()) {
+        continue; // quietly ignore a trade row
+      }
+
+      // handle position row
+      String typeRaw = positionTypeOpt.orElse("SMART");
       String typeUpper = typeRaw.toUpperCase(Locale.ENGLISH);
       try {
         PositionInfo info = parsePositionInfo(row);
@@ -358,14 +381,39 @@ public final class PositionCsvLoader {
               .ifPresent(parsed -> positions.add((T) parsed));
         } else {
           // failed to find the type
-          failures.add(FailureItem.of(
+          FailureItem failureItem = FailureItem.of(
               FailureReason.PARSING,
               "CSV position file '{fileName}' contained unknown position type '{type}' at line {lineNumber}",
               CharSources.extractFileName(charSource),
               typeRaw,
-              row.lineNumber()));
+              row.lineNumber())
+              .withAttribute(
+                  FailureAttributeKeys.SHORT_MESSAGE,
+                  Messages.format("Unknown '{}', '{}'", POSITION_TYPE_FIELD, typeRaw))
+              .withAttribute(FailureAttributeKeys.TYPE, typeRaw)
+              .withAttribute(FailureAttributeKeys.ROOT_CAUSE, "inputData");
+          failures.add(failureItem);
         }
 
+      } catch (ParseFailureException ex) {
+        String shortMessage = ex.getMessage();
+        String fileName = CharSources.extractFileName(charSource);
+        String lineNumber = Integer.toString(row.lineNumber());
+        FailureItem failureItem = ex.getFailureItem()
+            .withAttribute(FailureAttributeKeys.SHORT_MESSAGE, shortMessage)
+            .withAttribute(FailureAttributeKeys.LINE_NUMBER, lineNumber)
+            .withAttribute(FailureAttributeKeys.FILE_NAME, fileName)
+            .withAttribute(FailureAttributeKeys.TYPE, typeRaw)
+            .withAttribute(FailureAttributeKeys.ROOT_CAUSE, "inputData");
+
+        FailureItem updatedFailure = failureItem.mapMessage(ignored -> Messages.format(
+            "CSV position file '{}' type '{}' could not be parsed at line {}: {}",
+            fileName,
+            typeRaw,
+            lineNumber,
+            shortMessage));
+
+        failures.add(updatedFailure);
       } catch (RuntimeException ex) {
         failures.add(FailureItem.of(
             FailureReason.PARSING,

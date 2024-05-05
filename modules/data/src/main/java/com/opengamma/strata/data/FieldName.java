@@ -48,6 +48,18 @@ public final class FieldName
    */
   public static final FieldName CLEAN_PRICE = of("CleanPrice");
   /**
+   * The field name for the clean real price of a capital indexed bond.
+   * <p>
+   * The clean real price does not include the accrued interest.
+   */
+  public static final FieldName CLEAN_REAL_PRICE = of("CleanRealPrice");
+  /**
+   * The field name for the clean nominal price of a capital indexed bond.
+   * <p>
+   * The clean nominal price does not include the accrued interest.
+   */
+  public static final FieldName CLEAN_NOMINAL_PRICE = of("CleanNominalPrice");
+  /**
    * The field name for the dirty price of a coupon bond.
    * <p>
    * The dirty price includes the accrued interest.
@@ -57,14 +69,39 @@ public final class FieldName
    * The field name for the volatility of an asset.
    */
   public static final FieldName VOLATILITY = of("Volatility");
+  /**
+   * The field name for the yield to maturity.
+   * <p>
+   * This is used to refer to the yield of a coupon bond or bill.
+   */
+  public static final FieldName YIELD_TO_MATURITY = of("YieldToMaturity");
+  /**
+   * The field name for the real yield.
+   * <p>
+   * This is used to refer to the real yield of a capital indexed bond.
+   */
+  public static final FieldName REAL_YIELD_TO_MATURITY = of("RealYieldToMaturity");
+  /**
+   * The field name for the nominal yield.
+   * <p>
+   * This is used to refer to the yield of a coupon bond or bill.
+   */
+  public static final FieldName NOMINAL_YIELD_TO_MATURITY = of("NominalYieldToMaturity");
+  /**
+   * The field name for the par yield.
+   * <p>
+   * This is used to refer to the par yield of a coupon bond or bill.
+   */
+  public static final FieldName PAR_YIELD = of("ParYield");
 
   //-------------------------------------------------------------------------
+
   /**
    * Obtains an instance from the specified name.
    * <p>
    * Field names may contain any character, but must not be empty.
    *
-   * @param name  the name of the field
+   * @param name the name of the field
    * @return a field with the specified name
    */
   @FromString
@@ -74,8 +111,8 @@ public final class FieldName
 
   /**
    * Creates an instance.
-   * 
-   * @param name  the name of the field
+   *
+   * @param name the name of the field
    */
   private FieldName(String name) {
     super(name);

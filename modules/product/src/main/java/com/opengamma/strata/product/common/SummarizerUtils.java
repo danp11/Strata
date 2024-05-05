@@ -25,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 
 import static java.time.temporal.ChronoUnit.MONTHS;
+import com.opengamma.strata.product.option.Barrier;
 
 /**
  * Utilities to support summarizing portfolio items.
@@ -163,7 +164,26 @@ public final class SummarizerUtils {
     boolean roundBase = baseDec.scale() < counterDec.scale();
     CurrencyAmount round = roundBase ? base : counter;
     return (round.getAmount() < 0 ? "Pay " : "Rec ") +
-        SummarizerUtils.amount(round.mapAmount(a -> Math.abs(a))) + " " + "@ " + rate;
+        SummarizerUtils.amount(round.mapAmount(a -> Math.abs(a))) + " @ " + rate;
+  }
+
+  /**
+   * Provide a summary description of the given barrier.
+   * <p>
+   * Summary contains the barrier level, the type and the knock type e.g. "Up-and-KnockOut @ 1.25".
+   *
+   * @param barrier the barrier
+   * @param barrierObsDate the date on which the barrier level should be observed
+   * @return a summary description of the given barrier
+   */
+  public static String barrier(Barrier barrier, LocalDate barrierObsDate) {
+    StringBuilder buffer = new StringBuilder();
+    buffer.append(barrier.getBarrierType());
+    buffer.append("-and-");
+    buffer.append(barrier.getKnockType());
+    buffer.append(" @ ");
+    buffer.append(barrier.getBarrierLevel(barrierObsDate));
+    return buffer.toString();
   }
 
   //-------------------------------------------------------------------------

@@ -195,9 +195,9 @@ public class DiscountFxForwardRatesTest {
   @Test
   public void test_parameterSensitivity() {
     DiscountFxForwardRates test = DiscountFxForwardRates.of(CURRENCY_PAIR, FX_RATE, DFCURVE_GBP, DFCURVE_USD);
-    FxForwardSensitivity point = FxForwardSensitivity.of(CURRENCY_PAIR, GBP, DATE_VAL, 1d);
+    FxForwardSensitivity point = FxForwardSensitivity.of(CURRENCY_PAIR, GBP, DATE_VAL.plusDays(1), 1d);
     assertThat(test.parameterSensitivity(point).size()).isEqualTo(2);
-    FxForwardSensitivity point2 = FxForwardSensitivity.of(CURRENCY_PAIR, USD, DATE_VAL, 1d);
+    FxForwardSensitivity point2 = FxForwardSensitivity.of(CURRENCY_PAIR, USD, DATE_VAL.plusDays(1), 1d);
     assertThat(test.parameterSensitivity(point2).size()).isEqualTo(2);
   }
 

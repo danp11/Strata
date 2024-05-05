@@ -54,7 +54,7 @@ import com.opengamma.strata.product.swap.type.FixedFloatSwapConvention;
  */
 @BeanDefinition
 public final class SabrParametersSwaptionVolatilities
-    implements SabrSwaptionVolatilities, ImmutableBean, Serializable {
+    implements BlackSabrSwaptionVolatilities, ImmutableBean, Serializable {
   // To represent the data sensitivities (dataSensitivityAlpha, ...), DoubleMatrix does not work as the
   // number of raw data can be different for each element of the list.
 

@@ -24,6 +24,7 @@ import org.joda.beans.impl.direct.DirectMetaBean;
 import org.joda.beans.impl.direct.DirectMetaProperty;
 import org.joda.beans.impl.direct.DirectMetaPropertyMap;
 import org.joda.beans.impl.direct.DirectPrivateBeanBuilder;
+import org.joda.convert.FromString;
 
 import com.opengamma.strata.collect.ArgChecker;
 
@@ -54,7 +55,7 @@ public final class EtdVariant
   /**
    * The optional date code, populated for Weekly and Daily.
    * <p>
-   * This will be the week number for Weekly and the day-of-week for Daily.
+   * This will be the week number for Weekly and the day-of-month for Daily.
    */
   @PropertyDefinition(get = "optional")
   private final Integer dateCode;
@@ -64,7 +65,7 @@ public final class EtdVariant
   @PropertyDefinition(get = "optional")
   private final EtdSettlementType settlementType;
   /**
-   * The optional option type, 'American' or 'European', populated for Flex Options.
+   * The optional option type, such as 'American' or 'European', populated for Flex Options.
    */
   @PropertyDefinition(get = "optional")
   private final EtdOptionType optionType;
@@ -81,19 +82,6 @@ public final class EtdVariant
    */
   public static EtdVariant ofMonthly() {
     return MONTHLY;
-  }
-
-  /**
-   * The monthly ETD with specific settlement type.
-   *
-   * @param settlementType the settlement type
-   * @return the variant
-   */
-  public static EtdVariant ofMonthly(EtdSettlementType settlementType) {
-    if (EtdSettlementType.CASH.equals(settlementType)) {
-      return MONTHLY;
-    }
-    return new EtdVariant(EtdExpiryType.MONTHLY, null, settlementType, null);
   }
 
   /**
@@ -140,17 +128,19 @@ public final class EtdVariant
   }
 
   /**
-   * Parses the variant code.
+   * Parses the variant short code.
+   * <p>
+   * This expects an empty string for Monthly, the week number prefixed by 'W' for Weekly,
+   * the day number for daily, with a suffix of the settlement type and option type codes.
    * 
    * @param code the variant code
    * @return the variant
    */
-  static EtdVariant parseCode(String code) {
+  @FromString  // FromString without ToString, allowing incorrect serialized form to be read
+  public static EtdVariant parse(String code) {
     switch (code.length()) {
       case 0:
         return MONTHLY;
-      case 1:
-        return ofMonthly(EtdSettlementType.parseCode(code));
       case 2: {
         if (code.charAt(0) == 'W') {
           return ofWeekly(Integer.parseInt(code.substring(1)));
@@ -193,11 +183,9 @@ public final class EtdVariant
     this.optionType = optionType;
     if (type == EtdExpiryType.MONTHLY) {
       ArgChecker.isTrue(dateCode == null, "Monthly variant must have no dateCode");
-      ArgChecker.isTrue(
-          settlementType == null || settlementType != EtdSettlementType.CASH,
-          "Monthly variant cannot have explicit cash settlement");
+      ArgChecker.isTrue(settlementType == null, "Monthly variant must have no settlementType");
       ArgChecker.isTrue(optionType == null, "Monthly variant must have no optionType");
-      this.code = settlementType != null ? settlementType.getCode() : "";
+      this.code = "";
     } else if (type == EtdExpiryType.WEEKLY) {
       ArgChecker.notNull(dateCode, "dateCode");
       ArgChecker.isTrue(dateCode >= 1 && dateCode <= 5, "Week must be from 1 to 5");
@@ -228,7 +216,7 @@ public final class EtdVariant
    * @return true if this is a Flex Future or Flex Option
    */
   public boolean isFlex() {
-    return type == EtdExpiryType.DAILY && settlementType != null;
+    return settlementType != null;
   }
 
   /**
@@ -239,6 +227,7 @@ public final class EtdVariant
    * 
    * @return the short code
    */
+  // do NOT add @ToString, as that breaks the serialized form in classes like EtdFutureSecurity
   public String getCode() {
     return code;
   }
@@ -281,7 +270,7 @@ public final class EtdVariant
   /**
    * Gets the optional date code, populated for Weekly and Daily.
    * <p>
-   * This will be the week number for Weekly and the day-of-week for Daily.
+   * This will be the week number for Weekly and the day-of-month for Daily.
    * @return the optional value of the property, not null
    */
   public OptionalInt getDateCode() {
@@ -299,7 +288,7 @@ public final class EtdVariant
 
   //-----------------------------------------------------------------------
   /**
-   * Gets the optional option type, 'American' or 'European', populated for Flex Options.
+   * Gets the optional option type, such as 'American' or 'European', populated for Flex Options.
    * @return the optional value of the property, not null
    */
   public Optional<EtdOptionType> getOptionType() {

@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Files;
 
 /**
@@ -121,6 +122,7 @@ final class GlobalHolidayCalendars {
   // 1969, 26th May, 1st Sep - http://hansard.millbanksystems.com/written_answers/1967/mar/21/bank-holidays-1969-dates
   // 1970, 25th May, 31st Aug - http://hansard.millbanksystems.com/written_answers/1967/jul/28/bank-holidays
   // 2022, 2nd and 3rd Jun - https://www.gov.uk/government/news/extra-bank-holiday-to-mark-the-queens-platinum-jubilee-in-2022
+  // 2022, 19th Sep - https://www.gov.uk/government/news/bank-holiday-announced-for-her-majesty-queen-elizabeth-iis-state-funeral-on-monday-19-september
   static ImmutableHolidayCalendar generateLondon() {
     List<LocalDate> holidays = new ArrayList<>(2000);
     for (int year = 1950; year <= 2099; year++) {
@@ -167,12 +169,17 @@ final class GlobalHolidayCalendars {
       } else {
         holidays.add(first(year, 8).with(lastInMonth(MONDAY)));
       }
+      // queen's funeral
+      if (year == 2022) {
+        holidays.add(date(2022, 9, 19));
+      }
       // christmas
       holidays.add(christmasBumpedSatSun(year));
       holidays.add(boxingDayBumpedSatSun(year));
     }
-    holidays.add(date(2011, 4, 29));  // royal wedding
     holidays.add(date(1999, 12, 31));  // millennium
+    holidays.add(date(2011, 4, 29));  // royal wedding
+    holidays.add(date(2023, 5, 8));  // king's coronation
     removeSatSun(holidays);
     return ImmutableHolidayCalendar.of(HolidayCalendarIds.GBLO, holidays, SATURDAY, SUNDAY);
   }
@@ -633,9 +640,8 @@ final class GlobalHolidayCalendars {
   //-------------------------------------------------------------------------
   // generate CAMO
   // data sources
-  // https://www.cnt.gouv.qc.ca/en/leaves-and-absences/statutory-holidays/index.html
+  // https://www.cnesst.gouv.qc.ca/en/working-conditions/leave/statutory-holidays/list-paid-statutory-holidays
   // https://www.canada.ca/en/revenue-agency/services/tax/public-holidays.html
-  // http://www.statutoryholidayscanada.com/
   static ImmutableHolidayCalendar generateMontreal() {
     List<LocalDate> holidays = new ArrayList<>(2000);
     for (int year = 1950; year <= 2099; year++) {
@@ -654,7 +660,7 @@ final class GlobalHolidayCalendars {
       // thanksgiving
       holidays.add(first(year, 10).with(dayOfWeekInMonth(2, MONDAY)));
       // christmas
-      holidays.add(christmasBumpedSatSun(year));
+      holidays.add(bumpToMon(date(year, 12, 25)));
     }
     removeSatSun(holidays);
     return ImmutableHolidayCalendar.of(HolidayCalendarId.of("CAMO"), holidays, SATURDAY, SUNDAY);
@@ -840,8 +846,12 @@ final class GlobalHolidayCalendars {
     } else {
       holidays.add(date(year, 4, 25));
     }
-    // queens birthday
+    // queen's birthday
     holidays.add(first(year, 6).with(firstInMonth(MONDAY)));
+    // queen's funeral
+    if (year == 2022) {
+      holidays.add(date(year, 9, 26));
+    }
     // labour day
     holidays.add(first(year, 10).with(dayOfWeekInMonth(4, MONDAY)));
     // christmas
@@ -970,6 +980,10 @@ final class GlobalHolidayCalendars {
       holidays.add(first(year, 6).with(dayOfWeekInMonth(2, MONDAY)));
       // bank holiday
       holidays.add(first(year, 8).with(dayOfWeekInMonth(1, MONDAY)));
+      // queen's funeral
+      if (year == 2022) {
+        holidays.add(date(year, 9, 22));
+      }
       // labour day
       holidays.add(first(year, 10).with(dayOfWeekInMonth(1, MONDAY)));
       // christmas
@@ -1298,7 +1312,8 @@ final class GlobalHolidayCalendars {
   }
 
   // christmas
-  private static LocalDate christmasBumpedSatSun(int year) {
+  @VisibleForTesting
+  static LocalDate christmasBumpedSatSun(int year) {
     LocalDate base = LocalDate.of(year, 12, 25);
     if (base.getDayOfWeek() == SATURDAY || base.getDayOfWeek() == SUNDAY) {
       return LocalDate.of(year, 12, 27);
@@ -1316,7 +1331,8 @@ final class GlobalHolidayCalendars {
   }
 
   // boxing day
-  private static LocalDate boxingDayBumpedSatSun(int year) {
+  @VisibleForTesting
+  static LocalDate boxingDayBumpedSatSun(int year) {
     LocalDate base = LocalDate.of(year, 12, 26);
     if (base.getDayOfWeek() == SATURDAY || base.getDayOfWeek() == SUNDAY) {
       return LocalDate.of(year, 12, 28);

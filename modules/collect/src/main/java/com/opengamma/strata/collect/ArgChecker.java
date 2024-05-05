@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.math.DoubleMath;
+import com.opengamma.strata.collect.array.Matrix;
 
 /**
  * Contains utility methods for checking inputs to methods.
@@ -438,6 +439,30 @@ public final class ArgChecker {
     return argument;
   }
 
+  /**
+   * Checks that the specified argument is non-null and not empty.
+   * <p>
+   * Given the input argument, this returns only if it is non-null and contains
+   * at least one element. The element is not validated and may be null.
+   * For example, in a constructor:
+   * <pre>
+   *  this.names = ArgChecker.notEmpty(names, "names");
+   * </pre>
+   *
+   * @param <T> the type of the argument reflected in the result
+   * @param argument the argument to check, null or empty throws an exception
+   * @param name the name of the argument to use in the error message, not null
+   * @return the input {@code argument}, not null
+   * @throws IllegalArgumentException if the input is null or empty
+   */
+  public static <T extends Matrix> T notEmpty(T argument, String name) {
+    notNull(argument, name);
+    if (argument.size() == 0) {
+      throw new IllegalArgumentException(notEmptyArrayMsg(name));
+    }
+    return argument;
+  }
+
   // extracted to aid inlining performance
   private static String notEmptyArrayMsg(String name) {
     return "Argument array '" + name + "' must not be empty";
@@ -753,6 +778,118 @@ public final class ArgChecker {
   }
 
   //-------------------------------------------------------------------------
+
+  /**
+   * Checks that the argument is not positive.
+   * <p>
+   * Given the input argument, this returns only if it is less than or equal to zero.
+   * For example, in a constructor:
+   * <pre>
+   *  this.amount = ArgChecker.notPositive(amount, "amount");
+   * </pre>
+   *
+   * @param argument  the argument to check
+   * @param name  the name of the argument to use in the error message, not null
+   * @return the input {@code argument}
+   * @throws IllegalArgumentException if the input is positive
+   */
+  public static int notPositive(int argument, String name) {
+    if (argument > 0) {
+      throw new IllegalArgumentException(notPositiveMsg(name, argument));
+    }
+    return argument;
+  }
+
+  private static String notPositiveMsg(String name, Object argument) {
+    return "Argument '" + name + "' must not be positive but has value " + argument;
+  }
+
+  /**
+   * Checks that the argument is not positive.
+   * <p>
+   * Given the input argument, this returns only if it is less than or equal to zero.
+   * For example, in a constructor:
+   * <pre>
+   *  this.amount = ArgChecker.notPositive(amount, "amount");
+   * </pre>
+   *
+   * @param argument  the argument to check
+   * @param name  the name of the argument to use in the error message, not null
+   * @return the input {@code argument}
+   * @throws IllegalArgumentException if the input is positive
+   */
+  public static long notPositive(long argument, String name) {
+    if (argument > 0) {
+      throw new IllegalArgumentException(notPositiveMsg(name, argument));
+    }
+    return argument;
+  }
+
+  /**
+   * Checks that the argument is not positive.
+   * <p>
+   * Given the input argument, this returns only if it is less than or equal to zero.
+   * For example, in a constructor:
+   * <pre>
+   *  this.amount = ArgChecker.notPositive(amount, "amount");
+   * </pre>
+   *
+   * @param argument  the argument to check
+   * @param name  the name of the argument to use in the error message, not null
+   * @return the input {@code argument}
+   * @throws IllegalArgumentException if the input is positive
+   */
+  public static double notPositive(double argument, String name) {
+    if (argument > 0) {
+      throw new IllegalArgumentException(notPositiveMsg(name, argument));
+    }
+    return argument;
+  }
+
+  /**
+   * Checks that the argument is not positive.
+   * <p>
+   * Given the input argument, this returns only if it is not null and is less than or equal to zero.
+   * For example, in a constructor:
+   * <pre>
+   *  this.amount = ArgChecker.notPositive(amount, "amount");
+   * </pre>
+   *
+   * @param argument  the argument to check
+   * @param name  the name of the argument to use in the error message, not null
+   * @return the input {@code argument}
+   * @throws IllegalArgumentException if the input is null or positive
+   */
+  public static Decimal notPositive(Decimal argument, String name) {
+    notNull(argument, name);
+    if (argument.unscaledValue() > 0) {
+      throw new IllegalArgumentException(notPositiveMsg(name, argument));
+    }
+    return argument;
+  }
+
+  /**
+   * Checks that the argument is not positive if the arguement is not null.
+   * <p>
+   * Given the input argument, this returns only if it is null or if it is less than or equal to zero.
+   * For example, in a constructor:
+   * <pre>
+   *  this.amount = ArgChecker.notPositiveIfPresent(amount, "amount");
+   * </pre>
+   *
+   * @param argument  the argument to check
+   * @param name  the name of the argument to use in the error message, not null
+   * @return the input {@code argument}
+   * @throws IllegalArgumentException if the input is not null and is positive
+   */
+  public static Decimal notPositiveIfPresent(Decimal argument, String name) {
+    if (argument != null && argument.unscaledValue() > 0) {
+      throw new IllegalArgumentException(notPositiveMsg(name, argument));
+    }
+    return argument;
+  }
+
+  //-------------------------------------------------------------------------
   /**
    * Checks that the argument is not negative.
    * <p>
@@ -769,14 +906,14 @@ public final class ArgChecker {
    */
   public static int notNegative(int argument, String name) {
     if (argument < 0) {
-      throw new IllegalArgumentException(notNegativeMsg(name));
+      throw new IllegalArgumentException(notNegativeMsg(name, argument));
     }
     return argument;
   }
 
   // extracted to aid inlining performance
-  private static String notNegativeMsg(String name) {
-    return "Argument '" + name + "' must not be negative";
+  private static String notNegativeMsg(String name, Object argument) {
+    return "Argument '" + name + "' must not be negative but has value " + argument;
   }
 
   /**
@@ -795,7 +932,7 @@ public final class ArgChecker {
    */
   public static long notNegative(long argument, String name) {
     if (argument < 0) {
-      throw new IllegalArgumentException(notNegativeMsg(name));
+      throw new IllegalArgumentException(notNegativeMsg(name, argument));
     }
     return argument;
   }
@@ -816,7 +953,28 @@ public final class ArgChecker {
    */
   public static double notNegative(double argument, String name) {
     if (argument < 0) {
-      throw new IllegalArgumentException(notNegativeMsg(name));
+      throw new IllegalArgumentException(notNegativeMsg(name, argument));
+    }
+    return argument;
+  }
+
+  /**
+   * Checks that the argument is not negative.
+   * <p>
+   * Given the input argument, this returns only if it is zero or greater.
+   * For example, in a constructor:
+   * <pre>
+   *  this.amount = ArgChecker.notNegative(amount, "amount");
+   * </pre>
+   * 
+   * @param argument  the argument to check
+   * @param name  the name of the argument to use in the error message, not null
+   * @return the input {@code argument}
+   * @throws IllegalArgumentException if the input is negative
+   */
+  public static Decimal notNegative(Decimal argument, String name) {
+    if (argument.unscaledValue() < 0) {
+      throw new IllegalArgumentException(notNegativeMsg(name, argument));
     }
     return argument;
   }
@@ -871,7 +1029,7 @@ public final class ArgChecker {
   }
 
   // extracted to aid inlining performance
-  private static String notNegativeOrZeroMsg(String name, double argument) {
+  private static String notNegativeOrZeroMsg(String name, Object argument) {
     return "Argument '" + name + "' must not be negative or zero but has value " + argument;
   }
 
@@ -939,6 +1097,27 @@ public final class ArgChecker {
     }
     if (argument < 0) {
       throw new IllegalArgumentException("Argument '" + name + "' must be greater than zero but has value " + argument);
+    }
+    return argument;
+  }
+
+  /**
+   * Checks that the argument is not negative or zero.
+   * <p>
+   * Given the input argument, this returns only if it is greater than zero.
+   * For example, in a constructor:
+   * <pre>
+   *  this.amount = ArgChecker.notNegativeOrZero(amount, "amount");
+   * </pre>
+   * 
+   * @param argument  the argument to check
+   * @param name  the name of the argument to use in the error message, not null
+   * @return the input {@code argument}
+   * @throws IllegalArgumentException if the input is negative or zero
+   */
+  public static Decimal notNegativeOrZero(Decimal argument, String name) {
+    if (argument.unscaledValue() <= 0) {
+      throw new IllegalArgumentException(notNegativeOrZeroMsg(name, argument));
     }
     return argument;
   }

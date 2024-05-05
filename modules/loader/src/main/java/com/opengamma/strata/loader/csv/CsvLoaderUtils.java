@@ -228,29 +228,33 @@ public final class CsvLoaderUtils {
         if (week == 0) {
           return Pair.of(yearMonth, EtdVariant.ofDaily(day));
         } else {
-          throw new ParseFailureException(
-              "Unable to parse ETD variant, date columns conflict, must not  set both expiry day and expiry week");
+          throw new ParseFailureException("Unable to parse ETD variant, date columns conflict, must not set both " +
+              "expiry day and expiry week");
         }
       }
     } else {
-      EtdSettlementType settleType = settleTypeOpt.get();
       if (day == 0) {
-        // allow only this special case of physical options for now
-        if (settleType.equals(EtdSettlementType.PHYSICAL) && type.equals(EtdType.OPTION)) {
-          return Pair.of(yearMonth, EtdVariant.ofMonthly(EtdSettlementType.PHYSICAL));
-        }
-        throw new ParseFailureException("Unable to parse ETD variant for Flex '{value}', must set expiry day", type);
+        throw new ParseFailureException(
+            "'{field}' is empty, must be set when '{}' is provided as this denotes a Flex Option",
+            EXPIRY_DAY_FIELD,
+            SETTLEMENT_TYPE_FIELD);
       }
       if (week != 0) {
-        throw new ParseFailureException("Unable to parse ETD variant for Flex '{value}', must not set expiry week", type);
+        throw new ParseFailureException(
+            "'{field}' is empty, must be set when '{}' is provided as this denotes a Flex Option",
+            EXPIRY_WEEK_FIELD,
+            SETTLEMENT_TYPE_FIELD);
       }
       if (type == EtdType.FUTURE) {
-        return Pair.of(yearMonth, EtdVariant.ofFlexFuture(day, settleType));
+        return Pair.of(yearMonth, EtdVariant.ofFlexFuture(day, settleTypeOpt.get()));
       } else {
         if (!optionTypeOpt.isPresent()) {
-          throw new ParseFailureException("Unable to parse ETD variant for Flex Option, must set option type", type);
+          throw new ParseFailureException(
+              "'{field}' is empty, must be set when '{}' is provided as this denotes a Flex Option",
+              EXERCISE_STYLE_FIELD,
+              SETTLEMENT_TYPE_FIELD);
         }
-        return Pair.of(yearMonth, EtdVariant.ofFlexOption(day, settleType, optionTypeOpt.get()));
+        return Pair.of(yearMonth, EtdVariant.ofFlexOption(day, settleTypeOpt.get(), optionTypeOpt.get()));
       }
     }
   }
@@ -287,9 +291,13 @@ public final class CsvLoaderUtils {
       case "EUROPEAN":
       case "E":
         return EtdOptionType.EUROPEAN;
+      case "ASIAN":
+      case "T":
+        return EtdOptionType.ASIAN;
       default:
         throw new ParseFailureException(
-            "Unable to parse ETD option type from '{value}', must be 'American', 'European', 'A' or 'E' (case insensitive)", str);
+            "Unable to parse ETD option type from '{value}', must be 'American', 'European', 'Asian', 'A', 'E' or " +
+                "'T' (case insensitive)", str);
     }
   }
 
@@ -727,5 +735,4 @@ public final class CsvLoaderUtils {
   public static String formattedDouble(double value) {
     return Decimal.of(value).toString();
   }
-
 }

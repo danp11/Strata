@@ -38,6 +38,10 @@ public final class FailureAttributeKeys {
    */
   public static final String VALUE = "value";
   /**
+   * The attribute for the name of the parameter.
+   */
+  public static final String PARAM = "param";
+  /**
    * The attribute for the type that caused the failure.
    */
   public static final String TYPE = "type";
@@ -75,6 +79,16 @@ public final class FailureAttributeKeys {
    * The attribute for specifying the product type associated with the error.
    */
   public static final String PRODUCT_TYPE = "productType";
+
+  /**
+   * The attribute for specifying the root cause of the error.
+   */
+  public static final String ROOT_CAUSE = "rootCause";
+
+  /**
+   * The attribute for specifying the short message.
+   */
+  public static final String SHORT_MESSAGE = "shortMessage";
 
   // restricted constructor
   private FailureAttributeKeys() {
